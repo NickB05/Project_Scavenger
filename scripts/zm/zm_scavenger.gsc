@@ -1,6 +1,6 @@
 /*
 "Project Scavenger" - TranZit / Die Rise / Buried
-v1.2
+v1.3
 
 Made by: NickB_05
 
@@ -22,6 +22,7 @@ Made by: NickB_05
  
 v1.1 Patch Fixes made by: SyntaXError
 v1.2 Patch Fixes made by: NickB_05
+v1.3 Multiplayer Patch Fixes made by: NickB_05
 */
 
 #include maps\mp\zombies\_zm_buildables;
@@ -52,6 +53,8 @@ init()
     }
 
     level.mc_is_buried = ( map == "zm_buried" );
+
+    level.mc_have = [];
 
     level.mc_debug = 0;
     if ( getdvar( "mc_debug" ) == "1" )
@@ -435,8 +438,8 @@ mc_get_deliverable_pieces( zone )
         key = mc_piece_key( zone.pieces[i] );
 
         pool = 0;
-        if ( isdefined( self.mc_have[key] ) )
-            pool = self.mc_have[key];
+        if ( isdefined( level.mc_have[key] ) )
+            pool = level.mc_have[key];
 
         consumed = 0;
         if ( isdefined( used[key] ) )
@@ -456,8 +459,6 @@ player_collect_and_build()
 {
     self endon( "disconnect" );
     level waittill( "buildables_setup" );
-
-    self.mc_have = [];
 
     self thread mc_collect_loop();
     self thread mc_deliver_loop();
@@ -524,10 +525,10 @@ mc_try_collect()
         key = mc_piece_key( held );
         count = 0;
 
-        if ( isdefined( self.mc_have[key] ) )
-            count = self.mc_have[key];
+        if ( isdefined( level.mc_have[key] ) )
+            count = level.mc_have[key];
 
-        self.mc_have[key] = count + 1;
+        level.mc_have[key] = count + 1;
         self.mc_last_pickup_time = gettime();
         nearest = candidates[0];
         nearest_dist = distancesquared( self.origin, mc_get_stub_origin( nearest ) );
@@ -844,12 +845,12 @@ mc_deliver_pieces( zone, pieces )
 
         key = mc_piece_key( piece );
 
-        if ( isdefined( self.mc_have[key] ) )
+        if ( isdefined( level.mc_have[key] ) )
         {
-            self.mc_have[key] = self.mc_have[key] - 1;
+            level.mc_have[key] = level.mc_have[key] - 1;
 
-            if ( self.mc_have[key] <= 0 )
-                self.mc_have[key] = undefined;
+            if ( level.mc_have[key] <= 0 )
+                level.mc_have[key] = undefined;
         }
     }
 }
