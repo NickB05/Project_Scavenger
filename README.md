@@ -37,7 +37,7 @@ Scavenger Project replaces the original part-carrying mechanic on selected maps 
 
 ---
 
-# 📖 Tutorial (English)
+# 📖 Tutorial
 
 > **Step 0:** Sell your soul. *(Optional)* 
 
