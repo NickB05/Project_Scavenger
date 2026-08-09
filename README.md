@@ -72,7 +72,6 @@ Start **Plutonium BO2 Zombies**, load into **Tranzit**, **Die Rise**, or **Burie
 ### ⚠️ Known Issues
 
 * On **Die Rise**, buildable tables may occasionally become interactable from the floor above, same issue may happen inside the Farm House in **Tranzit**.
-* On **Buried**, some buildable parts might not be compatible with certain workbenches, a temporal solution to this issue is to search for another workbench until i fix this bug. (fixed in v1.1 patch)
 ---
 
 ## 🎉 You're done!
