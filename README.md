@@ -57,7 +57,7 @@ AppData\Local\Plutonium\storage\t6
 
 Drag and drop the downloaded folders into the `t6` directory.
 
-> Remember to delete the folder corresponding to your language; this will prevent conflicts.
+> Remember to delete the folder that dosent correspond to your language; this will prevent conflicts.
 
 ### 4. Launch the game
 
@@ -85,7 +85,7 @@ AppData\Local\Plutonium\storage\t6
 
 Arrastra y suelta las carpetas descargadas en el directorio `t6`.
 
-> Recuerda eliminar la carpeta correspondiente a tu idioma; esto evitará conflictos.
+> Recuerda eliminar la carpeta que no corresponde a tu idioma; esto evitará conflictos.
 
 ### 4. Inicia el juego
 
