@@ -65,34 +65,6 @@ Start **Plutonium BO2 Zombies**, load into **Tranzit**, **Die Rise**, or **Burie
 
 ---
 
-# 📖 Tutorial (Español Latino)
-
-> **Paso 0:** Vende tu alma. *(Opcional)*
-
-### 1. Descarga los archivos
-
-Descarga o clona este repositorio.
-
-### 2. Abre tu carpeta de Plutonium
-
-Ve a la siguiente ruta:
-
-```text
-AppData\Local\Plutonium\storage\t6
-```
-
-### 3. Instala el mod
-
-Arrastra y suelta las carpetas descargadas en el directorio `t6`.
-
-> Recuerda eliminar la carpeta que no corresponde a tu idioma; esto evitará conflictos.
-
-### 4. Inicia el juego
-
-Inicia **Plutonium BO2 Zombies**, carga **Tranzit**, **Die Rise** o **Buried**, ¡y disfruta del nuevo sistema de transporte de objetos construibles!
-
----
-
 ## 🎯 Objectives for Future Updates
 
 * Recreate the **Mob of the Dead / Origins-style UI**, allowing players to check which parts they have collected directly from the leaderboard.
