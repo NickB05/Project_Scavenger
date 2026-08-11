@@ -1,6 +1,6 @@
 /*
 "Project Scavenger" - TranZit / Die Rise / Buried
-v1.3
+v1.4
 
 Made by: NickB_05
 
@@ -22,7 +22,7 @@ Made by: NickB_05
  
 v1.1 Patch Fixes made by: SyntaXError
 v1.2 Patch Fixes made by: NickB_05
-v1.3 Multiplayer Patch Fixes made by: NickB_05
+v1.3 and v1.4 Multiplayer Patch Fixes made by: NickB_05
 */
 
 #include maps\mp\zombies\_zm_buildables;
@@ -296,6 +296,8 @@ mc_build_radius_sq( name )
 mc_setup_custom_prompts()
 {
     level waittill( "buildables_setup" );
+	
+    level.mc_buildables_ready = true;
 
     foreach ( stub in level.buildable_stubs )
     {
@@ -458,7 +460,8 @@ mc_get_deliverable_pieces( zone )
 player_collect_and_build()
 {
     self endon( "disconnect" );
-    level waittill( "buildables_setup" );
+    if ( !isdefined( level.mc_buildables_ready ) )
+        level waittill( "buildables_setup" );
 
     self thread mc_collect_loop();
     self thread mc_deliver_loop();
