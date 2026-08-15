@@ -45,12 +45,17 @@ v1.5 Leaderboard Update made by: NickB_05
 #define MC_TAB_SLOT_GAP 6 // horizontal spacing between squares in the row
 #define MC_TAB_CHECK_SIZE 10 // size of the checkmark (zm_hud_icon_sq_scafold) in the bottom-right corner
 
+#define MC_NAVCARD_X 634 // horizontal position of the navcard square (tip opposite the row)
+#define MC_NAVCARD_Y 97 // vertical position of the navcard square
+
 init()
 {
     map = getdvar( "mapname" );
 
     if ( map != "zm_transit" && map != "zm_highrise" && map != "zm_buried" )
         return;
+
+    precacheshader( "zm_hud_icon_sq_scafold" );
 
     if ( map == "zm_buried" )
     {
@@ -201,6 +206,21 @@ mc_representative_icon( name )
             return "zm_hud_icon_hatch";
         case "busladder":
             return "zm_hud_icon_ladder";
+    }
+
+    return undefined;
+}
+
+mc_navcard_icon( map )
+{
+    switch ( map )
+    {
+        case "zm_transit":
+            return "zm_hud_icon_sq_keycard";
+        case "zm_highrise":
+            return "zm_hud_icon_sq_keycard_2";
+        case "zm_buried":
+            return "zm_hud_icon_sq_keycard_buried";
     }
 
     return undefined;
@@ -416,7 +436,7 @@ mc_tab_buildable_list()
     map = getdvar( "mapname" );
 
     list = [];
-
+	
 	if ( map == "zm_highrise" )
     {
         list[0] = "slipgun_zm";
@@ -432,6 +452,7 @@ mc_tab_buildable_list()
         list[3] = "headchopper_zm";
         return list;
     }
+	
     list[0] = "turbine";
     list[1] = "riotshield_zm";
     list[2] = "turret";
@@ -457,14 +478,18 @@ mc_tab_square_watch()
     borders = [];
     squares = [];
     icons = [];
-    counters = [];
-    checks = [];
+    navcard_border = undefined;
+    navcard_square = undefined;
+    navcard_icon = undefined;
     shown = false;
 
     while ( true )
     {
         if ( self.mc_tab_held && !shown )
         {
+            self.mc_tab_counters = [];
+            self.mc_tab_checks = [];
+
             for ( i = 0; i < list.size; i++ )
             {
                 slot_x = MC_TAB_SQUARE_X + i * ( MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 + MC_TAB_SLOT_GAP );
@@ -507,35 +532,48 @@ mc_tab_square_watch()
                 if ( isdefined( icon_shader ) )
                     icon setshader( icon_shader, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2 );
 
-                counter = newclienthudelem( self );
-                counter.horzalign = "left";
-                counter.vertalign = "top";
-                counter.alignx = "center";
-                counter.aligny = "middle";
-                counter.x = slot_x;
-                counter.y = MC_TAB_SQUARE_Y;
-                counter.fontscale = 1.17;
-                counter.alpha = 0;
-                counter.sort = 3;
-                counter settext( "" );
-
-                check = newclienthudelem( self );
-                check.horzalign = "left";
-                check.vertalign = "top";
-                check.alignx = "center";
-                check.aligny = "middle";
-                check.x = slot_x;
-                check.y = MC_TAB_SQUARE_Y;
-                check.alpha = 0;
-                check.sort = 4;
-                check setshader( "zm_hud_icon_sq_scafold", MC_TAB_CHECK_SIZE, MC_TAB_CHECK_SIZE );
-
                 borders[i] = border;
                 squares[i] = square;
                 icons[i] = icon;
-                counters[i] = counter;
-                checks[i] = check;
             }
+
+            navcard_border = newclienthudelem( self );
+            navcard_border.horzalign = "left";
+            navcard_border.vertalign = "top";
+            navcard_border.alignx = "center";
+            navcard_border.aligny = "middle";
+            navcard_border.x = MC_NAVCARD_X;
+            navcard_border.y = MC_NAVCARD_Y;
+            navcard_border.alpha = 0.7;
+            navcard_border.color = ( 0, 0, 0 );
+            navcard_border.sort = 1;
+            navcard_border setshader( "white", MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2, MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 );
+
+            navcard_square = newclienthudelem( self );
+            navcard_square.horzalign = "left";
+            navcard_square.vertalign = "top";
+            navcard_square.alignx = "center";
+            navcard_square.aligny = "middle";
+            navcard_square.x = MC_NAVCARD_X;
+            navcard_square.y = MC_NAVCARD_Y;
+            navcard_square.alpha = 0.4;
+            navcard_square.color = ( 0.2, 0.2, 0.2 );
+            navcard_square.sort = 2;
+            navcard_square setshader( "white", MC_TAB_SQUARE_SIZE, MC_TAB_SQUARE_SIZE );
+
+            navcard_icon = newclienthudelem( self );
+            navcard_icon.horzalign = "left";
+            navcard_icon.vertalign = "top";
+            navcard_icon.alignx = "center";
+            navcard_icon.aligny = "middle";
+            navcard_icon.x = MC_NAVCARD_X;
+            navcard_icon.y = MC_NAVCARD_Y;
+            navcard_icon.alpha = 0.5;
+            navcard_icon.sort = 3;
+
+            icon_shader = mc_representative_icon( "sq_common" );
+            if ( isdefined( icon_shader ) )
+                navcard_icon setshader( icon_shader, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2 );
 
             shown = true;
         }
@@ -543,12 +581,6 @@ mc_tab_square_watch()
         {
             for ( i = 0; i < list.size; i++ )
             {
-                if ( isdefined( checks[i] ) )
-                    checks[i] destroy();
-
-                if ( isdefined( counters[i] ) )
-                    counters[i] destroy();
-
                 if ( isdefined( icons[i] ) )
                     icons[i] destroy();
 
@@ -562,8 +594,41 @@ mc_tab_square_watch()
             borders = [];
             squares = [];
             icons = [];
-            counters = [];
-            checks = [];
+
+            if ( isdefined( navcard_icon ) )
+                navcard_icon destroy();
+
+            if ( isdefined( navcard_square ) )
+                navcard_square destroy();
+
+            if ( isdefined( navcard_border ) )
+                navcard_border destroy();
+
+            navcard_border = undefined;
+            navcard_square = undefined;
+            navcard_icon = undefined;
+
+            if ( isdefined( self.mc_tab_counters ) )
+            {
+                foreach ( counter_elem in self.mc_tab_counters )
+                {
+                    if ( isdefined( counter_elem ) )
+                        counter_elem destroy();
+                }
+            }
+
+            if ( isdefined( self.mc_tab_checks ) )
+            {
+                foreach ( check_elem in self.mc_tab_checks )
+                {
+                    if ( isdefined( check_elem ) )
+                        check_elem destroy();
+                }
+            }
+
+            self.mc_tab_counters = [];
+            self.mc_tab_checks = [];
+
             shown = false;
         }
 
@@ -572,8 +637,10 @@ mc_tab_square_watch()
             for ( i = 0; i < list.size; i++ )
             {
                 slot_x = MC_TAB_SQUARE_X + i * ( MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 + MC_TAB_SLOT_GAP );
-                self mc_update_tab_slot_hud( list[i], slot_x, borders[i], squares[i], icons[i], counters[i], checks[i] );
+                self mc_update_tab_slot_hud( list[i], slot_x, borders[i], squares[i], icons[i] );
             }
+
+            self mc_update_tab_slot_hud( "sq_common", MC_NAVCARD_X, navcard_border, navcard_square, navcard_icon );
         }
 
         wait 0.05;
@@ -613,17 +680,20 @@ mc_find_stub_by_buildable_name( name )
     return undefined;
 }
 
-mc_update_tab_slot_hud( name, slot_x, border, square, icon, counter, check )
+mc_update_tab_slot_hud( name, slot_x, border, square, icon )
 {
     square_y = MC_TAB_SQUARE_Y;
 
     stub = mc_find_stub_by_buildable_name( name );
 
+    need_counter = false;
+    need_check = false;
+    have = 0;
+    total = 0;
+
     if ( !isdefined( stub ) )
     {
         icon.alpha = 0;
-        counter.alpha = 0;
-        check.alpha = 0;
     }
     else
     {
@@ -640,35 +710,91 @@ mc_update_tab_slot_hud( name, slot_x, border, square, icon, counter, check )
 
         deliverable = self mc_get_deliverable_pieces( zone );
         have = built_count + deliverable.size;
+        total = zone.pieces.size;
 
         if ( is_built )
         {
             icon.alpha = 1;
-            counter.alpha = 0;
-            check.alpha = 1;
+            need_check = true;
         }
         else if ( have > 0 )
         {
             icon.alpha = 0.5;
-            counter.alpha = 1;
-            counter settext( have + "/" + zone.pieces.size );
-            check.alpha = 0;
+            need_counter = true;
             square_y = MC_TAB_SQUARE_Y_ACTIVE;
         }
         else
         {
             icon.alpha = 0.5;
-            counter.alpha = 0;
-            check.alpha = 0;
         }
     }
 
-    border.y = square_y;
+    if ( isdefined( border ) )
+        border.y = square_y;
+
     square.y = square_y;
     icon.y = square_y;
-    counter.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) + MC_TAB_BORDER_PAD + 6;
-    check.x = slot_x + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
-    check.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
+
+    if ( !isdefined( self.mc_tab_counters ) )
+        self.mc_tab_counters = [];
+
+    if ( !isdefined( self.mc_tab_checks ) )
+        self.mc_tab_checks = [];
+
+    counter = self.mc_tab_counters[name];
+
+    if ( need_counter && !isdefined( counter ) )
+    {
+        counter = newclienthudelem( self );
+        counter.horzalign = "left";
+        counter.vertalign = "top";
+        counter.alignx = "center";
+        counter.aligny = "middle";
+        counter.fontscale = 1.17;
+        counter.alpha = 1;
+        counter.sort = 3;
+        self.mc_tab_counters[name] = counter;
+    }
+    else if ( !need_counter && isdefined( counter ) )
+    {
+        counter destroy();
+        self.mc_tab_counters[name] = undefined;
+        counter = undefined;
+    }
+
+    if ( isdefined( counter ) )
+    {
+        counter.x = slot_x;
+        counter.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) + MC_TAB_BORDER_PAD + 6;
+        counter settext( have + "/" + total );
+    }
+
+    check = self.mc_tab_checks[name];
+
+    if ( need_check && !isdefined( check ) )
+    {
+        check = newclienthudelem( self );
+        check.horzalign = "left";
+        check.vertalign = "top";
+        check.alignx = "center";
+        check.aligny = "middle";
+        check.alpha = 1;
+        check.sort = 4;
+        check setshader( "zm_hud_icon_sq_scafold", MC_TAB_CHECK_SIZE, MC_TAB_CHECK_SIZE );
+        self.mc_tab_checks[name] = check;
+    }
+    else if ( !need_check && isdefined( check ) )
+    {
+        check destroy();
+        self.mc_tab_checks[name] = undefined;
+        check = undefined;
+    }
+
+    if ( isdefined( check ) )
+    {
+        check.x = slot_x + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
+        check.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
+    }
 }
 
 mc_get_stub_origin( stub )
