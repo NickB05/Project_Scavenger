@@ -1,4 +1,4 @@
-# 🛠️ Project Scavenger V1.5 LEADERBOARD UPDATE!
+# 🛠️ Project Scavenger | V1.5 LEADERBOARD UPDATE!
 
 Bring the **modern Zombies buildable system** to the classic Black Ops II experience on **Plutonium**.
 
