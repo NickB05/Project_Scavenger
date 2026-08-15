@@ -417,15 +417,6 @@ mc_tab_buildable_list()
 
     list = [];
 
-    
-    if ( map == "zm_transit" )
-    list[0] = "turbine";
-    list[1] = "riotshield_zm";
-    list[2] = "turret";
-    list[3] = "electric_trap";
-    list[4] = "jetgun_zm";
-    return list;
-	
 	if ( map == "zm_highrise" )
     {
         list[0] = "slipgun_zm";
@@ -441,6 +432,12 @@ mc_tab_buildable_list()
         list[3] = "headchopper_zm";
         return list;
     }
+    list[0] = "turbine";
+    list[1] = "riotshield_zm";
+    list[2] = "turret";
+    list[3] = "electric_trap";
+    list[4] = "jetgun_zm";
+    return list;
 }
 
 mc_tab_square_watch()
