@@ -1,6 +1,6 @@
 /*
 "Project Scavenger" - TranZit / Die Rise / Buried
-v1.4
+v1.5
 
 Made by: NickB_05
 
@@ -23,6 +23,7 @@ Made by: NickB_05
 v1.1 Patch Fixes made by: SyntaXError
 v1.2 Patch Fixes made by: NickB_05
 v1.3 and v1.4 Multiplayer Patch Fixes made by: NickB_05
+v1.5 Leaderboard Update made by: NickB_05
 */
 
 #include maps\mp\zombies\_zm_buildables;
@@ -35,6 +36,14 @@ v1.3 and v1.4 Multiplayer Patch Fixes made by: NickB_05
 #define MC_BUILD_RADIUS_SQ_TIGHT 2500 //Hatch/ladder/plow – positioned more tightly to avoid stepping on the window repair or other nearby items
 #define MC_HEIGHT_TOLERANCE 82 // Maximum permitted height difference (Z) – filters out different floors (usually spaced 128+ units apart) without disrupting standard construction
 #define MC_DEFAULT_BUILD_TIME 3000 // ms, is used if the stub does not bring its own usetime
+
+#define MC_TAB_SQUARE_X 91  // horizontal position (from top-left corner, 640 scale)
+#define MC_TAB_SQUARE_Y 97 // base vertical position: no parts, or buildable already constructed
+#define MC_TAB_SQUARE_Y_ACTIVE 87 // vertical position when slot has >=1 part and is not constructed
+#define MC_TAB_SQUARE_SIZE 29 // width/height of each black square (lower this number to make it smaller)
+#define MC_TAB_BORDER_PAD 2 // thickness of the gray border on each side of the square
+#define MC_TAB_SLOT_GAP 6 // horizontal spacing between squares in the row
+#define MC_TAB_CHECK_SIZE 10 // size of the checkmark (zm_hud_icon_sq_scafold) in the bottom-right corner
 
 init()
 {
@@ -398,7 +407,271 @@ on_player_connect()
     {
         level waittill( "connected", player );
         player thread player_collect_and_build();
+        player thread mc_tab_square_watch();
     }
+}
+
+mc_tab_buildable_list()
+{
+    map = getdvar( "mapname" );
+
+    list = [];
+
+    
+    if ( map == "zm_transit" )
+    list[0] = "turbine";
+    list[1] = "riotshield_zm";
+    list[2] = "turret";
+    list[3] = "electric_trap";
+    list[4] = "jetgun_zm";
+    return list;
+	
+	if ( map == "zm_highrise" )
+    {
+        list[0] = "slipgun_zm";
+        list[1] = "springpad_zm";
+        return list;
+    }
+
+    if ( map == "zm_buried" )
+    {
+        list[0] = "turbine";
+        list[1] = "springpad_zm";
+        list[2] = "subwoofer_zm";
+        list[3] = "headchopper_zm";
+        return list;
+    }
+}
+
+mc_tab_square_watch()
+{
+    self endon( "disconnect" );
+
+    self notifyonplayercommand( "mc_tab_down", "+scores" );
+    self notifyonplayercommand( "mc_tab_up", "-scores" );
+
+    self.mc_tab_held = false;
+
+    self thread mc_tab_down_listener();
+    self thread mc_tab_up_listener();
+
+    list = mc_tab_buildable_list();
+
+    borders = [];
+    squares = [];
+    icons = [];
+    counters = [];
+    checks = [];
+    shown = false;
+
+    while ( true )
+    {
+        if ( self.mc_tab_held && !shown )
+        {
+            for ( i = 0; i < list.size; i++ )
+            {
+                slot_x = MC_TAB_SQUARE_X + i * ( MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 + MC_TAB_SLOT_GAP );
+
+                border = newclienthudelem( self );
+                border.horzalign = "left";
+                border.vertalign = "top";
+                border.alignx = "center";
+                border.aligny = "middle";
+                border.x = slot_x;
+                border.y = MC_TAB_SQUARE_Y;
+                border.alpha = 0.7;
+                border.color = ( 0, 0, 0 );
+                border.sort = 1;
+                border setshader( "white", MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2, MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 );
+
+                square = newclienthudelem( self );
+                square.horzalign = "left";
+                square.vertalign = "top";
+                square.alignx = "center";
+                square.aligny = "middle";
+                square.x = slot_x;
+                square.y = MC_TAB_SQUARE_Y;
+                square.alpha = 0.4;
+                square.color = ( 0.2, 0.2, 0.2 );
+                square.sort = 2;
+                square setshader( "white", MC_TAB_SQUARE_SIZE, MC_TAB_SQUARE_SIZE );
+
+                icon = newclienthudelem( self );
+                icon.horzalign = "left";
+                icon.vertalign = "top";
+                icon.alignx = "center";
+                icon.aligny = "middle";
+                icon.x = slot_x;
+                icon.y = MC_TAB_SQUARE_Y;
+                icon.alpha = 0.5;
+                icon.sort = 3;
+
+                icon_shader = mc_representative_icon( list[i] );
+                if ( isdefined( icon_shader ) )
+                    icon setshader( icon_shader, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2, MC_TAB_SQUARE_SIZE - MC_TAB_BORDER_PAD * 2 );
+
+                counter = newclienthudelem( self );
+                counter.horzalign = "left";
+                counter.vertalign = "top";
+                counter.alignx = "center";
+                counter.aligny = "middle";
+                counter.x = slot_x;
+                counter.y = MC_TAB_SQUARE_Y;
+                counter.fontscale = 1.17;
+                counter.alpha = 0;
+                counter.sort = 3;
+                counter settext( "" );
+
+                check = newclienthudelem( self );
+                check.horzalign = "left";
+                check.vertalign = "top";
+                check.alignx = "center";
+                check.aligny = "middle";
+                check.x = slot_x;
+                check.y = MC_TAB_SQUARE_Y;
+                check.alpha = 0;
+                check.sort = 4;
+                check setshader( "zm_hud_icon_sq_scafold", MC_TAB_CHECK_SIZE, MC_TAB_CHECK_SIZE );
+
+                borders[i] = border;
+                squares[i] = square;
+                icons[i] = icon;
+                counters[i] = counter;
+                checks[i] = check;
+            }
+
+            shown = true;
+        }
+        else if ( !self.mc_tab_held && shown )
+        {
+            for ( i = 0; i < list.size; i++ )
+            {
+                if ( isdefined( checks[i] ) )
+                    checks[i] destroy();
+
+                if ( isdefined( counters[i] ) )
+                    counters[i] destroy();
+
+                if ( isdefined( icons[i] ) )
+                    icons[i] destroy();
+
+                if ( isdefined( squares[i] ) )
+                    squares[i] destroy();
+
+                if ( isdefined( borders[i] ) )
+                    borders[i] destroy();
+            }
+
+            borders = [];
+            squares = [];
+            icons = [];
+            counters = [];
+            checks = [];
+            shown = false;
+        }
+
+        if ( shown )
+        {
+            for ( i = 0; i < list.size; i++ )
+            {
+                slot_x = MC_TAB_SQUARE_X + i * ( MC_TAB_SQUARE_SIZE + MC_TAB_BORDER_PAD * 2 + MC_TAB_SLOT_GAP );
+                self mc_update_tab_slot_hud( list[i], slot_x, borders[i], squares[i], icons[i], counters[i], checks[i] );
+            }
+        }
+
+        wait 0.05;
+    }
+}
+
+mc_tab_down_listener()
+{
+    self endon( "disconnect" );
+
+    while ( true )
+    {
+        self waittill( "mc_tab_down" );
+        self.mc_tab_held = true;
+    }
+}
+
+mc_tab_up_listener()
+{
+    self endon( "disconnect" );
+
+    while ( true )
+    {
+        self waittill( "mc_tab_up" );
+        self.mc_tab_held = false;
+    }
+}
+
+mc_find_stub_by_buildable_name( name )
+{
+    foreach ( stub in level.buildable_stubs )
+    {
+        if ( isdefined( stub.buildablezone ) && stub.buildablezone.buildable_name == name )
+            return stub;
+    }
+
+    return undefined;
+}
+
+mc_update_tab_slot_hud( name, slot_x, border, square, icon, counter, check )
+{
+    square_y = MC_TAB_SQUARE_Y;
+
+    stub = mc_find_stub_by_buildable_name( name );
+
+    if ( !isdefined( stub ) )
+    {
+        icon.alpha = 0;
+        counter.alpha = 0;
+        check.alpha = 0;
+    }
+    else
+    {
+        zone = stub.buildablezone;
+        is_built = isdefined( stub.built ) && stub.built;
+
+        built_count = 0;
+
+        for ( i = 0; i < zone.pieces.size; i++ )
+        {
+            if ( isdefined( zone.pieces[i].built ) && zone.pieces[i].built )
+                built_count++;
+        }
+
+        deliverable = self mc_get_deliverable_pieces( zone );
+        have = built_count + deliverable.size;
+
+        if ( is_built )
+        {
+            icon.alpha = 1;
+            counter.alpha = 0;
+            check.alpha = 1;
+        }
+        else if ( have > 0 )
+        {
+            icon.alpha = 0.5;
+            counter.alpha = 1;
+            counter settext( have + "/" + zone.pieces.size );
+            check.alpha = 0;
+            square_y = MC_TAB_SQUARE_Y_ACTIVE;
+        }
+        else
+        {
+            icon.alpha = 0.5;
+            counter.alpha = 0;
+            check.alpha = 0;
+        }
+    }
+
+    border.y = square_y;
+    square.y = square_y;
+    icon.y = square_y;
+    counter.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) + MC_TAB_BORDER_PAD + 6;
+    check.x = slot_x + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
+    check.y = square_y + ( MC_TAB_SQUARE_SIZE / 2 ) - ( MC_TAB_CHECK_SIZE / 2 );
 }
 
 mc_get_stub_origin( stub )
