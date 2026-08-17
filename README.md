@@ -1,14 +1,14 @@
-# 🛠️ Project Scavenger | V1.7 LEADERBOARD EXPANSION UPDATE!
+# 🛠️ Project Scavenger | V1.7 ELEVATOR KEY + LEADERBOARD EXPANSION UPDATE!
 
 Bring the **modern Zombies buildable system** to the classic Black Ops II experience on **Plutonium**.
 
 Scavenger Project replaces the original part-carrying mechanic on selected maps with a system inspired by **Mob of the Dead**, **Origins**, and **Black Ops III Zombies**, allowing players to carry buildable parts in a much more intuitive and modern way.
 
 
-<img width="654" height="360" alt="buildable_demo" src="https://github.com/user-attachments/assets/71db7243-17b8-45d3-a192-d0b31532fa11" />
-<img width="1432" height="440" alt="image" src="https://github.com/user-attachments/assets/0eff787b-9456-4379-af95-58e64d33884f" />
-<img width="583" height="405" alt="image" src="https://github.com/user-attachments/assets/0f9ffa48-adfc-4271-a422-7a21b6667364" />
-
+<img width="654" height="360" alt="buildable_demo" src="https://github.com/user-attachments/assets/71db7243-17b8-45d3-a192-d0b31532fa11"/> <img width="426" height="240" alt="key_demo" src="https://github.com/user-attachments/assets/3aaaedd4-f1fe-46a1-9dcb-8cd7e33b168a" />
+<img width="1408" height="467" alt="image" src="https://github.com/user-attachments/assets/0e808a1a-c714-40d3-82f4-de0475dc54a7" />
+<img width="1408" height="363" alt="Captura de pantalla 2026-08-17 194823" src="https://github.com/user-attachments/assets/02e99f81-9f19-4bd9-8672-2e05f2a73d81" />
+<img width="1381" height="420" alt="image" src="https://github.com/user-attachments/assets/79d8c72a-f266-4061-8dfb-9feab727dfaa" />
 
 > **Supported maps:** Tranzit, Die Rise, and Buried.
 
