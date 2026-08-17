@@ -1,57 +1,60 @@
 /*
-"Project Scavenger" - TranZit / Die Rise / Buried
+"Scavenger Project" - TranZit / Die Rise / Buried
 v1.7
 
-Made by: NickB_05
+Created by: NickB_05
 
- This script allows you to carry every single buildable part from the
- victis line up of maps, similar to the mob, origins and bo3s part carrying
- system
+ This script lets you carry all the buildable pieces from the maps
+ in the Victis group, similar to the piece-carrying system used
+ in Mob, Origins, and BO3.
 
- My objective is to make the part carrying system as much similar as mobs and
- origins as possible, having similar ui stuff, with the parts being displayed
- in the leaderboard, for now it isnt like that since im still learning how to
- display the ui, but atleast the concept its 100% similar to the original
+ My goal is for the piece-carrying system to be as close as possible
+ to the one in Mob and Origins, including similar interface elements
+ and showing the pieces on the scoreboard; for now that's not the
+ case, since I'm still learning how to implement the interface, but
+ at least the concept is 100% faithful to the original.
 
- The only parts that you cant carry all in one are the elevator key,
- prision key, booze, candies and weapon chalks, mostly to keep the mechanics
- and... i have some ideas for the elevator key... enjoy the script!
+ The only pieces that can't all be carried at once are the elevator key,
+ the prison key, the liquor, the candy, and the weapon chalks; this is
+ mainly to preserve the mechanics. 
+ 
+ Enjoy the script!
 
- DISCLAMER: If you're going to use this script for a different project please
- credit my work, since it took me atleast a month to finish this project
+ NOTICE: If you're going to use this script for another project, please
+ give credit for this work, since it took at least a month to finish.
 
 v1.1 Patch Fixes made by: SyntaXError
 v1.2 Patch Fixes made by: NickB_05
-v1.3, v1.4 Multiplayer Patch Fixes made by: NickB_05
-v1.5, y v1.6 Leaderboard Update made by: NickB_05
-v1.7 Leaderboard Expansion Update made by: NickB_05
+v1.3 Patch Fixes and v1.4 for multiplayer made by: NickB_05
+v1.5 and v1.6 Leaderboard Update made by: NickB_05
+v1.7 Elevator Key Update made by: NickB_05
 */
 
 #include maps\mp\zombies\_zm_buildables;
 #include maps\mp\zombies\_zm_weapons;
 #include maps\mp\zombies\_zm_utility;
 #include maps\mp\gametypes_zm\_hud_util;
-#include mp\_utility;
+#include maps\mp\_utility;
 
 #define MC_BUILD_RADIUS_SQ 7000 // horizontal distance (X/Y) for most buildable areas
-#define MC_BUILD_RADIUS_SQ_TIGHT 2500 // Hatch/ladder/plough: placed closer together to avoid stepping into the window repair zone or other nearby elements
+#define MC_BUILD_RADIUS_SQ_TIGHT 2500 // Hatch/ladder/plow: placed closer together to avoid overlapping the window repair zone or other nearby elements
 #define MC_HEIGHT_TOLERANCE 82 // Maximum allowed height difference (Z): filters out different levels (usually separated by 128 units or more) without interfering with standard building
-#define MC_DEFAULT_BUILD_TIME 3000 // ms, used if the stub does not provide its own usage time
+#define MC_DEFAULT_BUILD_TIME 3000 // ms, used if the stub doesn't bring its own use time
 
-#define MC_TAB_SQUARE_X 91  // horizontal position (from top-left corner, 640 scale)
-#define MC_TAB_SQUARE_Y 97 // base vertical position: no parts, or buildable already constructed
-#define MC_TAB_SQUARE_Y_ACTIVE 87 // vertical position when that slot has >=1 part and is not yet constructed
-#define MC_TAB_SQUARE_SIZE 29 // width/height of each black square (lower this number to make it smaller)
+#define MC_TAB_SQUARE_X 91  // horizontal position (from the top-left corner, 640 scale)
+#define MC_TAB_SQUARE_Y 97 // base vertical position: no pieces, or buildable already built
+#define MC_TAB_SQUARE_Y_ACTIVE 87 // vertical position when that slot has >=1 piece and is not built
+#define MC_TAB_SQUARE_SIZE 29 // width/height of each black square (lower this number to shrink it)
 #define MC_TAB_BORDER_PAD 2 // thickness of the gray border on each side of the square
 #define MC_TAB_SLOT_GAP 6 // horizontal spacing between squares in the row
-#define MC_TAB_CHECK_SIZE 10 // size of the checkmark (zm_hud_icon_sq_scafold) in the bottom-right corner #define
-#define MC_TAB_LOCK_SIZE 10 // size of the red cross (zm_hud_icon_fan) when the buildable is blocked by its counterpart (gallows/guillotine)
+#define MC_TAB_CHECK_SIZE 10 // size of the checkmark (zm_hud_icon_sq_scafold) in the bottom-right corner
+#define MC_TAB_LOCK_SIZE 10 // size of the red cross (zm_hud_icon_fan) when the buildable is locked by its pair (gallows/guillotine)
 
 #define MC_NAVCARD_X 634 // horizontal position of the navcard square (tip opposite the row)
 #define MC_NAVCARD_Y 97 // vertical position of the navcard square
 
-#define MC_KEY_COOLDOWN_MS 15000 // wait time in ms per player between Elevator Key uses
-#define MC_KEY_INSERT_TIME 500 // time in ms to insert the Elevator Key (hold [use])
+#define MC_KEY_COOLDOWN_MS 15000 // ms of wait per player between uses of the Elevator Key
+#define MC_KEY_INSERT_TIME 500 // ms it takes to insert the Elevator Key (hold [use])
 
 init()
 {
@@ -75,6 +78,15 @@ init()
     }
 
     level.mc_is_buried = ( map == "zm_buried" );
+
+    level.mc_elevator_is_on_floor_func = undefined;
+    level.mc_elevator_level_for_floor_func = undefined;
+
+    if ( map == "zm_highrise" )
+    {
+        level.mc_elevator_is_on_floor_func = getfunction( "maps/mp/zm_highrise_elevators", "elevator_is_on_floor" );
+        level.mc_elevator_level_for_floor_func = getfunction( "maps/mp/zm_highrise_elevators", "elevator_level_for_floor" );
+    }
 
     level.mc_have = [];
 
@@ -108,6 +120,7 @@ init()
     if ( map == "zm_highrise" )
     {
         level.mc_key_buildables["ekeys_zm"] = 1;
+
         level.mc_immediate_buildables["ekeys_zm"] = 1;
     }
 
@@ -167,7 +180,7 @@ mc_display_name( name )
         case "buried_sq_bt_m_tower":
             return "Gallows";
         case "buried_sq_bt_r_tower":
-            return "Guillotine";
+            return "Guillotines";
         case "cattlecatcher":
             return "Cattle Catcher";
         case "bushatch":
@@ -579,14 +592,14 @@ mc_key_prompt_logic( player )
     if ( !mc_key_resolve_elevator( self ) )
         return true;
 
-    if ( self.elevator maps\mp\zm_highrise_elevators::elevator_is_on_floor( self.floor ) )
+    if ( isdefined( level.mc_elevator_is_on_floor_func ) && self.elevator [[ level.mc_elevator_is_on_floor_func ]]( self.floor ) )
         return true;
 
     remaining = player mc_key_cooldown_remaining();
 
     if ( remaining > 0 )
     {
-        self.hint_string = "Key on Cooldown...";
+        self.hint_string = "Key on cooldown...";
         self.cursor_hint = "HINT_NOICON";
         return false;
     }
@@ -615,7 +628,9 @@ mc_key_resolve_elevator( stub )
     floor = int( stub.script_parameters );
 
     stub.elevator = elevator;
-    stub.floor = elevator maps\mp\zm_highrise_elevators::elevator_level_for_floor( floor );
+
+    if ( isdefined( level.mc_elevator_level_for_floor_func ) )
+        stub.floor = elevator [[ level.mc_elevator_level_for_floor_func ]]( floor );
 
     return true;
 }
@@ -1287,7 +1302,7 @@ mc_try_use_key()
         if ( !mc_key_resolve_elevator( stub ) )
             continue;
 
-        if ( stub.elevator maps\mp\zm_highrise_elevators::elevator_is_on_floor( stub.floor ) )
+        if ( isdefined( level.mc_elevator_is_on_floor_func ) && stub.elevator [[ level.mc_elevator_is_on_floor_func ]]( stub.floor ) )
             continue;
 
         self thread mc_key_insert_sequence( stub );
@@ -1357,7 +1372,7 @@ mc_key_insert_sequence( stub )
     if ( !success || !isdefined( self ) )
         return;
 
-    if ( stub.elevator maps\mp\zm_highrise_elevators::elevator_is_on_floor( stub.floor ) )
+    if ( isdefined( level.mc_elevator_is_on_floor_func ) && stub.elevator [[ level.mc_elevator_is_on_floor_func ]]( stub.floor ) )
         return;
 
     if ( isdefined( level.flag ) && isdefined( level.flag["power_on"] ) && level.flag["power_on"] )
@@ -1422,7 +1437,7 @@ mc_try_collect()
             continue;
 
         key = held_key;
-		
+
         if ( mc_is_key( candidates[0].buildablezone.buildable_name ) && isdefined( self.mc_has_key ) && self.mc_has_key )
             continue;
 
