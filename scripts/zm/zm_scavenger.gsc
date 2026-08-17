@@ -310,7 +310,7 @@ mc_show_key_pickup_notify( hud_icon )
     text.y = -23;
     text.fontscale = 1.3;
     text.alpha = 1;
-    text settext( "Llave del Elevador" );
+    text settext( "Elevator Key" );
 
     self.mc_key_notify_icon = icon;
     self.mc_key_notify_text = text;
