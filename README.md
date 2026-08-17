@@ -21,17 +21,18 @@ Scavenger Project replaces the original part-carrying mechanic on selected maps 
 *  Turret
 *  Electric Trap
 *  Jet Gun
+*  Elevator Key
 *  Trample Steam
 *  Head Chopper
 *  Resonator
 *  Nav-Card Tables
 *  Richtofen's Endgame Guillotine
 *  Maxis' Endgame Gallows
+*  All the Bus parts
 
 ---
 
 ##  Buildables That Keep Their Original Mechanics 
-*  Elevator Key
 *  Chalks
 *  Booze
 *  Candies
