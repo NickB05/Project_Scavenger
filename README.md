@@ -1,4 +1,4 @@
-# 🛠️ Project Scavenger | V1.7 ELEVATOR KEY + LEADERBOARD EXPANSION UPDATE!
+# 🛠️ Project Scavenger | V1.8 ELEVATOR KEY PATCH FIXES
 
 Bring the **modern Zombies buildable system** to the classic Black Ops II experience on **Plutonium**.
 
